@@ -1,0 +1,601 @@
+---
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+关于影响白葡萄酒品质的因素探究
+========================================================
+这份报告探究了关于包含4,898 种白葡萄酒，及 
+11个量化每种酒化学成分的变量的数据集。
+
+```{r echo=FALSE, message=FALSE, warning=FALSE, packages}
+# Load all of the packages that you end up using
+# in your analysis in this code chunk.
+
+# Notice that the parameter "echo" was set to FALSE for this code chunk.
+# This prevents the code from displaying in the knitted HTML output.
+# You should set echo=FALSE for all code chunks in your file.
+#install.packages("psych")
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(psych)
+library(GGally)
+library(memisc)
+library(RColorBrewer)
+```
+# Univariate Plots Section
+
+```{r echo=FALSE, Load_the_Data}
+# Load the Data
+#setwd("C:/Users/19156/Desktop/study/R/wine")
+whitewine <- read.csv("wineQualityWhites.csv")
+#View(whitewine)
+
+#remove column X
+whitewine$X <- NULL
+
+```
+
+
+```{r echo=FALSE}
+dim(whitewine)
+names(whitewine)
+str(whitewine)
+summary(whitewine)
+```
+
+
+-关于数据集
+
+品质   min 3   mean 5.88   max  9
+酒精度 min 8   mean 10.51  max  14.2
+pH值   min 2.7 mean 3.19   max  3.82
+
+```{r echo=FALSE}
+ggplot(aes(x=sulphates),data = whitewine) + 
+  geom_histogram(binwidth = 0.01, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(0.2,1.1,0.02))
+```
+
+```{r echo=FALSE}
+summary(whitewine$sulphates)
+```
+
+硫酸盐是呈现右偏分布的，平均值接近0.49。
+
+```{r echo=FALSE}
+
+ggplot(aes(x=pH),data = whitewine) + 
+  geom_histogram(binwidth = 0.02, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(2.7,4,0.1))
+```
+
+```{r echo=FALSE}
+summary(whitewine$pH)
+```
+
+pH值呈正态分布，平均值为3.2。
+
+```{r echo=FALSE}
+
+ggplot(aes(x=density),data = whitewine) + 
+  geom_histogram(binwidth = 0.0001, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(0.98,1.04,0.001),limits = c(0.985,1.005))
+```
+
+```{r echo=FALSE}
+summary(whitewine$density)
+```
+密度为正态分布，平均值接近0.994，但有些超过1.005g / cm^3。
+
+```{r echo=FALSE}
+
+ggplot(aes(x=total.sulfur.dioxide),data = whitewine) + 
+  geom_histogram(binwidth = 5, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(0,300,10),limits = c(0,300))
+```
+
+```{r echo=FALSE}
+summary(whitewine$total.sulfur.dioxide)
+```
+总二氧化硫含量正态分布，平均值接近138，有些超过300。
+
+```{r echo=FALSE}
+ggplot(aes(x=free.sulfur.dioxide),data = whitewine) +
+  geom_histogram(binwidth = 1, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(0,290,10),limits = c(0,100))
+```
+
+```{r echo=FALSE}
+summary(whitewine$free.sulfur.dioxide)
+
+```
+游离硫二氧化物呈正态分布，平均值接近35mg / dm^3，50％的数据在23和46之间，
+有相当一部分数据显示超过50。但根据资料信息游离SO2浓度超过50 ppm的信息，二氧化硫在葡萄酒的鼻子和口味中变得明显。 
+
+```{r echo=FALSE}
+ggplot(aes(x=chlorides),data = whitewine) +
+  geom_histogram(binwidth = 0.01, color = 'white', fill = 'black') +
+  scale_x_log10(breaks = c(0.01,0.03,0.04,0.05,0.1,0.2,0.3))
+```
+
+```{r echo=FALSE}
+summary(whitewine$chlorides)
+
+```
+大约50%的数据的氯化物含量在0.036 ~ 0.05g / dm ^ 3 之间。
+
+```{r echo=FALSE}
+ggplot(aes(x=citric.acid),data = whitewine) +
+  geom_histogram(binwidth = 0.02, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(0,1.68,0.2),limits = c(0,0.86))
+```
+
+```{r echo=FALSE}
+summary(whitewine$citric.acid)
+
+```
+柠檬酸缓慢呈正态分布，平均值接近0.34g / dm ^ 3。
+
+```{r echo=FALSE}
+ggplot(aes(x=volatile.acidity),data = whitewine) +
+  geom_histogram(binwidth = 0.01, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(0.07,1.11,0.01),limits = c(0,0.8))
+```
+
+```{r echo=FALSE}
+summary(whitewine$volatile.acidity)
+```
+挥发性酸度呈现了右偏分布，50％的数据在0.21~0.32g / dm ^ 3之间，但有些超过1g / dm ^ 3，资料显示过高的水平会导致不愉快的‘酸味’。
+
+```{r echo=FALSE}
+ggplot(aes(x=fixed.acidity),data = whitewine) +
+  geom_histogram(binwidth = 0.2, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(3.5,14.5,0.5), limits = c(3.5,11))
+```
+
+```{r echo=FALSE}
+summary(whitewine$fixed.acidity)
+
+```
+固定的酸度为正态分布，平均值接近6.8g / dm ^ 3，几乎50％的数据分布在6.3和7.3之间。
+
+```{r echo=FALSE}
+p1 <- ggplot(aes(x=residual.sugar),data = whitewine) +
+  coord_cartesian(xlim = c(0.6, 20)) +
+  geom_histogram(binwidth = 0.5, color = 'white', fill = 'black') +
+  scale_x_continuous(breaks = seq(0,20,2)) +
+  labs(x='Residual sugar(g/dm^3)',
+       y='Count',
+       title='Visualize the distribution of orignal residual.sugar')
+
+p2 <- ggplot(aes(x=residual.sugar),data = whitewine) +
+  coord_cartesian(xlim = c(0.6,20)) +
+  geom_histogram(binwidth = 0.05, color = 'white', fill = 'black') + 
+  scale_x_log10(breaks = seq(0,20,2)) +
+  labs(x='Residual sugar(g/dm^3)',
+       y='Count',
+       title='Visualize the distribution of log10(residual.sugar)')
+
+grid.arrange(p1, p2,ncol = 1)
+```
+
+```{r echo=FALSE}
+summary(whitewine$residual.sugar)
+
+```
+为了更好地了解残糖的分布情况，对长尾数据进行了取log10观察特征.呈现双峰分布第一次出现在1.5g/L左右，第二个在10g/L左右。基于资料信息'很难找到含有少于1g/L葡萄酒的葡萄酒， 大于45g/L被认为是甜的'。 
+
+```{r echo=FALSE}
+
+whitewine$taste <- cut(whitewine$residual.sugar,c(0,1,4,12,45,66))
+whitewine$taste <- as.factor(whitewine$taste)
+
+whitewine$sugar.taste[whitewine$taste == "(0,1]"] <- "Bone_Dry"
+whitewine$sugar.taste[whitewine$taste == "(1,4]"] <- "Dry"
+whitewine$sugar.taste[whitewine$taste == "(4,12]"] <- "Off_Dry"
+whitewine$sugar.taste[whitewine$taste == "(12,45]"] <- "Semi_sweet"
+whitewine$sugar.taste[whitewine$taste == "(45,66]"] <- "Sweety"
+
+whitewine <- whitewine[,-c(13)]                   
+whitewine$sugar.taste <- as.factor(whitewine$sugar.taste)
+
+table(whitewine$sugar.taste)
+table(whitewine$quality)
+```
+
+#口味分类
+
+继续通过搜索葡萄酒的相关知识，我们按照酒中的残糖量将我们根据葡萄酒的残糖量分为
+Bone_Dry(0,1]，dry(1,4]，off-dry(4,12]，Semi_sweet(12,45]，sweet(45,66]
+来划分口味为5种，
+这份数据中 bone—dry有170份，Dry为1927，Off-dry为1975，semi-sweet为825，只有一份
+是sweet口味。
+
+```{r echo=FALSE}
+whitewine$allacidity <- whitewine$fixed.acidity+whitewine$volatile.acidity+whitewine$citric.acid
+summary(whitewine$allacidity)
+ggplot(aes(x=allacidity),data = whitewine) +
+  geom_histogram(binwidth = 0.2, color = 'white', fill = 'black') + 
+  scale_x_continuous(breaks = seq(4,15,0.5))
+```
+
+
+资料中提到‘most acids involved with wine or fixed or nonvolatile’，为了容易理解我们将使用所有酸度的和来分析，应该会发现新特征，所以设置了总酸度新变量。
+
+
+#Univariate Analysis
+
+###What is the structure of your dataset?
+
+包含了4898个葡萄酒的样本数据， 关于葡萄酒的成分有酒精度，pH值，各种离子成分，以及残糖量，密度等，根据这些指标还有一列是专家的评定结果，分数在0~10之间（差~非常好）。我们读取数据集然后删掉了名称为X的一列，因为本身有index可以使用。
+
+###What is/are the main feature(s) of interest in your dataset?
+
+数据集的主要特征是品质--专家的评级，我想尝试通过数据集中的项目来预测葡萄酒的品质。
+
+###What other features in the dataset do you think will help support your investigation into your feature(s) of interest?
+通过查阅一些关于葡萄酒的相关文章，往往甜味（糖+酒精），酸味，苦味（酚--单宁）会决定酒的品质。所以尝试分析了：固定酸度，挥发性酸度，柠檬酸，总酸度，残糖量，酒精和质量这些特征。
+
+###Did you create any new variables from existing variables in the dataset?
+
+设置了总酸度和口味两个新变量
+
+###Of the features you investigated, were there any unusual distributions? Did you perform any operations on the data to tidy, adjust, or change the form of the data? If so, why did you do this?
+
+解残糖的分布情况，原始数据为右偏长尾分布，对长尾数据进行了取log10观察特征.呈现双峰分布。
+
+# Bivariate Plots Section
+
+```{r echo=FALSE}
+ggcorr(whitewine,
+       method = c("all.obs","spearman"),
+       nbreaks = 4,palette = "PuOr",label = TRUE,
+       name = "spearman correlation coeff.(rho)",
+       hjust=0.8,angle=-70,size=3) +
+  ggtitle("Spearman correlation coefficient matrix")
+
+
+```
+
+```{r echo=FALSE}
+data_without_taste <- whitewine[ , !names(whitewine) %in% c("sugar.taste")]
+data_without_acid_ta <- whitewine[ , !names(whitewine) %in% c("fixed.acidity","volatile.acidity","citric.acid","sugar.taste")]
+
+cor(data_without_taste)
+cor(data_without_acid_ta)
+```
+
+##根据图像可以看出以下项目有较大相关性，建立图形进一步观测。
+
+-residual.sugar & density 
+-chlorides & total.sulfur.dioxide
+-alcohol & density
+-ph & quality
+-allacidity & quality
+-residual.sugar & quality
+-alcohol & quality
+-residual.sugar & alcohol
+
+```{r echo=FALSE}
+#residual.sugar & density
+ggplot(aes(x=residual.sugar,y=density),data = whitewine) +
+  geom_point(color = I('blue'),alpha = 1/4,position = 'jitter') +
+  coord_cartesian(xlim = c(0,quantile(whitewine$residual.sugar,0.95))) +
+  geom_smooth(method = "lm", se = FALSE) +
+  ggtitle("Residual.sugar & Density")
+cor.test(whitewine$residual.sugar,whitewine$density)
+```
+
+葡萄酒中残糖和密度之间的关系非常强, 相关性为0.8。
+
+```{r echo=FALSE}
+#alcohol & density
+ggplot(aes(x=alcohol,y=density),data = whitewine) +
+  geom_point(color = I('blue'),alpha = 1/2) +
+  geom_smooth(method = "lm") +
+  ggtitle("Alcohol & Density")
+cor.test(whitewine$alcohol,whitewine$density)
+```
+
+酒精和密度之间的关系也非常强大约-0.78。
+
+```{r echo=FALSE}
+#pH & quality
+ggplot(aes(x=quality,y=pH),data = whitewine) +
+  geom_jitter(color = I('blue'),alpha = 1/4) +
+  ggtitle("Quality & pH")
+cor.test(whitewine$quality,whitewine$pH)
+```
+
+
+```{r echo=FALSE}
+#chlorides & total.sulfur.dioxide
+ggplot(aes(x=chlorides,y=total.sulfur.dioxide),data = whitewine) +
+  geom_point(color = I('blue'),alpha = 1/4) +
+  coord_cartesian(ylim = c(0,
+                           quantile(whitewine$total.sulfur.dioxide, .99)),
+                  xlim = c(0,quantile(whitewine$chlorides, .97))) +
+  geom_smooth(method = "lm") +
+  ggtitle("Chlorides & Total.sulfur.dioxide")
+cor.test(whitewine$chlorides,whitewine$total.sulfur.dioxide)
+```
+
+
+```{r echo=FALSE}
+#residual.sugar & quality
+ggplot(aes(x=quality,y=residual.sugar),data = whitewine) +
+  geom_jitter(color = I('blue'),alpha = 1/4) +
+  ggtitle("Residual.sugar & Quality")
+cor.test(whitewine$residual.sugar,whitewine$quality)
+```
+
+可以看出这些组合的相关性很小。评级和残糖无关，我猜测对于葡萄酒的评级会受专家个人喜爱口味的影响。
+
+```{r echo=FALSE}
+#allacidity & quality
+ggplot(aes(x=allacidity,y=quality),data = whitewine) +
+  geom_jitter(color = I('blue'),alpha = 1/4) +
+  ggtitle("Allacidity & Quality")
+cor.test(whitewine$allacidity,whitewine$quality)
+```
+
+总酸度和品质的相关值是-0.13，，看到这些特征的线性模型，它几乎是垂直线。
+
+```{r echo=FALSE}
+#residual.sugar & alcohol
+ggplot(aes(x=alcohol,y=residual.sugar),data = whitewine) +
+  geom_jitter(color = I('blue'),alpha = 1/4) +
+  ggtitle("Residual.sugar & alcohol")
+cor.test(whitewine$residual.sugar,whitewine$alcohol)
+```
+
+残糖和酒精的相关度大约为-0.45
+
+
+```{r echo=FALSE}
+#alcohol & quality
+ggplot(aes(x=factor(quality),y=alcohol),data = whitewine) +
+  geom_jitter(alpha = 1/10) +
+  geom_boxplot(alpha=1/10,color='blue') +
+  stat_summary(fun.y = 'mean',geom = 'point', color='red') +
+  labs(x='Quality (score between 3 and 9)',
+       y='Alcohol (% by volume)',
+       title='Boxplot of alcohol across qualities')
+
+```
+
+酒精和品质的箱线图，评级5的平均值酒精度相对所有评级最低，6~9评级随度数增高均值递增，但3~5级之间相反，可以看出这对组合似乎相关度不高。
+
+### Talk about some of the relationships you observed in this part of the investigation. How did the feature(s) of interest vary with other features in the dataset?
+
+在双变量分析中可以说密度特征与酒精和残糖密切相关。
+
+
+### Did you observe any interesting relationships between the other features (not the main feature(s) of interest)?
+
+但是，没有找到与品质有非常显着的单一关系的因素。我们可以说酿造优质的葡萄酒并不那么容易。
+最有趣的关系涉及密度特征。 事实上，看到特征之间的相关性，密度几乎总是最高的值。
+
+
+### What was the strongest relationship you found?
+
+密度和残糖值的相关度为0.84 ，密度和酒精的相关度为-0.78
+
+# Multivariate Plots Section
+
+```{r echo=FALSE}
+#residual.sugar & density
+ggplot(aes(x=density,y=residual.sugar,color=quality),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(xlim = c(quantile(whitewine$density,.01),quantile(whitewine$density,.96))) +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~quality) +
+  ggtitle("Residual.sugar & Density by quality")
+cor.test(whitewine$residual.sugar,whitewine$density)
+```
+
+葡萄酒的品级与密度和残糖都有密切的相关性，在品质提高的时候线性模型向左位移。
+
+```{r echo=FALSE}
+#residual.sugar & density
+ggplot(aes(x=density,y=residual.sugar,color=sugar.taste),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(xlim = c(quantile(whitewine$density,.01),quantile(whitewine$density,.99))) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_brewer(palette = 'BuPu') +
+  ggtitle("Residual.sugar & Density by quality")
+cor.test(whitewine$residual.sugar,whitewine$density)
+```
+
+这张图可以清楚地看出我们根据残糖量来划分了葡萄酒的口味。
+
+```{r echo=FALSE}
+#alcohol & density  quality
+ggplot(aes(x=density,y=alcohol,color=factor(quality)),data = whitewine) +
+  coord_cartesian(xlim = c(0.985,1.005),
+                  ylim = c(5, 15)) +
+  geom_jitter() +
+  scale_color_brewer(type = "seq") +
+  theme_dark() +
+  labs(x='Density(mg/l)',
+       y='Alcohol (% by volume)',
+       title='Relationship of density vs alcohol with colored quality levels')
+```
+
+品质较高的密度与酒精浓度值似乎在图的左上方，而品质较低的密度与酒精浓度数值在左侧有所下降，也就是说随着品质的升高酒精&密度的整体水平向左上方位移，但并不一定是说品质越好的葡萄酒的酒精度数就很高。
+
+```{r echo=FALSE}
+#alcohol & density sugar.taste
+ggplot(aes(x=density,y=alcohol,color=sugar.taste),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(xlim = c(quantile(whitewine$density,.01),quantile(whitewine$density,.99))) +
+  geom_smooth(method = "lm", se = FALSE) +
+  scale_color_brewer(palette = 'BuPu') +
+  ggtitle("Alcohol & Density by sugar.taste")
+cor.test(whitewine$residual.sugar,whitewine$density)
+```
+
+随着甜度的增加lm直线向右位移，但是似乎甜口的葡萄酒的酒精与密度值与干型葡萄酒相比更低一些。
+
+-探究品质到底还和什么因素有直观的特征
+```{r echo=FALSE}
+#pH，alcohol & quality
+ggplot(aes(x=pH,
+           y=alcohol,
+           color=quality),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(ylim=c(min(whitewine$alcohol),quantile(whitewine$alcohol,.99))) +
+  ggtitle("pH & Alcohol by Quality")
+```
+
+
+```{r echo=FALSE}
+#allacidity，alcohol + residual.sugar& quality
+ggplot(aes(x=allacidity,
+           y=quality,
+           color=alcohol + log10(residual.sugar)),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(xlim = c(quantile(whitewine$allacidity,.01),quantile(whitewine$allacidity,.99))) +
+  ggtitle("Allacidity & Quality by alcohol + log10(residual.sugar)")
+```
+
+```{r echo=FALSE}
+#allacidity，alcohol + residual.sugar& quality
+ggplot(aes(x=alcohol + log10(residual.sugar),
+           y=quality,
+           color=allacidity),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  ggtitle("Alcohol + log10(residual.sugar)y & Quality by Allacidit")
+```
+
+```{r echo=FALSE}
+#allacidity，alcohol + residual.sugar& quality
+ggplot(aes(x=allacidity,
+           y=alcohol + log10(residual.sugar),
+           color=quality),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(xlim = c(quantile(whitewine$allacidity,.01),quantile(whitewine$allacidity,.99)))  +
+  facet_wrap(~quality) +
+  ggtitle("Allacidity & alcohol + log10(residual.sugar) &  Quality")
+```
+
+```{r echo=FALSE}
+#pH，allacidity & sugar.taste
+ggplot(aes(x=pH,
+           y=allacidity,
+           color=sugar.taste),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(ylim=c(min(whitewine$allacidity),quantile(whitewine$allacidity,.99))) +
+  geom_smooth(method = "lm") + 
+  ggtitle("pH & Allacidity by Sugar.taste")
+```
+
+随着pH值的上升总酸量下降，这是由于葡萄酒中游离的SO2离子量远远大于醋酸离子，SO2离子属于强酸弱碱离子所以溶液会显酸性（ph<7），但是醋酸离子属于强碱弱酸，溶液则显碱性（pH > 7）,我们所说的柠檬酸也是一样，资料中说“葡萄酒中醋酸的含量，如果含量过高，会导致不愉快的酸味”，这里的酸并不是指葡萄酒的pH值，仅仅是说味觉的口感。
+
+
+```{r echo=FALSE}
+#pH，allacidity & quality
+ggplot(aes(x=pH,
+           y=allacidity,
+           color=quality),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(ylim=c(min(whitewine$allacidity),quantile(whitewine$allacidity,.99))) +
+  geom_smooth(method = "lm") + 
+  ggtitle("pH & allacidity by Quality")
+```
+
+-通过以上的图表得出高品质的葡萄酒似乎并不容易。请看接下来的分析吧。
+
+```{r echo=FALSE}
+m1 <- lm(quality ~ allacidity, data = whitewine)
+m2 <- update(m1, ~ . + alcohol)
+m3 <- update(m2, ~ . + log10(residual.sugar))
+mtable(m1,m2,m3)
+summary(m3)
+
+```
+
+#Multivariate Analysis
+###Talk about some of the relationships you observed in this part of the investigation. Were there features that strengthened each other in terms of looking at your feature(s) of interest?
+
+双变量分析时，我们发现每种评级的葡萄酒中残糖量和酒精密度的相关性很高，通过建立混合酸度，酒精和残糖量的线性模型中，r方为0.21，存在21%左右的品质差别相关度。
+
+###Were there any interesting or surprising interactions between features?
+葡萄酒中游离的SO2离子让 ph<7,但口感上的酸和pH值没有直接关系。
+
+###OPTIONAL: Did you create any models with your dataset? Discuss the strengths and limitations of your model.
+
+为了预测葡萄酒的品质，我创建了一个线性模型，试图弄清楚葡萄酒的品质与酒精+糖和总酸度的关系。 但是该模型似乎不是非常准确，m3列中显示的3颗星，模型中有0.21的相关影响。
+
+# Final Plots and Summary
+
+### Plot One
+```{r echo=FALSE, Plot_One}
+table(whitewine$sugar.taste)
+ggplot(aes(x=residual.sugar),data = whitewine) +
+  geom_histogram(binwidth = 0.02, color = 'white', fill = 'black') + 
+  scale_x_log10(breaks = c(1,4,12,45)) +
+  labs(x='log10(Residual.sugar) (g/dm^3)',
+       y='count',
+       title='The feature of log10(Residual.sugar)')
+```
+
+### Description One
+将残糖值的长尾数据取log10处理之后出现了双峰分布的直方图，根据葡萄酒的含糖量我们把这份数据的葡萄酒分成Bone_Dry，Dry，Off_Dry，Semi_sweet，Sweety五种口味，或许可以解释为该消费群体对Dry，Off_Dry口味更加偏爱，但是这里只出现了一个sweet，也许是一个利口酒，不管怎么说算是一个异常值。
+
+### Plot Two
+```{r echo=FALSE, Plot_Two}
+ggplot(aes(x=residual.sugar,y=density),data = whitewine) +
+  geom_point(color = I('blue'),alpha = 1/4,position = 'jitter') +
+  scale_x_log10(breaks = c(1,4,12,45)) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(x='log10(Residual.sugar) (g/dm^3)',
+       y='Density(g/cm^3)',
+       title='
+The relationshi between log10(Residual.sugar) and Density')
+cor.test(whitewine$residual.sugar,whitewine$density)
+```
+
+### Description Two
+可以看出残糖量是与密度关切度最高的项目，随着残糖量的数值增加，密度也增大，几乎呈现线性关系，相关度约为84%。
+
+### Plot Three
+```{r echo=FALSE, Plot_Three}
+ggplot(aes(x=allacidity,
+           y=quality,
+           color=alcohol + log10(residual.sugar)),data = whitewine) +
+  geom_point(alpha = 0.5,position = 'jitter') +
+  coord_cartesian(xlim = c(quantile(whitewine$allacidity,.01),quantile(whitewine$allacidity,.99)))  +
+  labs(x='Allacidity(g/dm^3)',
+       y='Quality(score between 0 and 10)',
+       title='Allacidity & Quality by alcohol + log10(residual.sugar)')
+
+m <- lm(quality ~ allacidity + alcohol + log10(residual.sugar),data = whitewine)
+summary(m)
+```
+### Description Three
+尝试通过m建立葡萄酒品质和总酸度，酒精，残糖值的log10的模型来探索相关度，但是只有0.21，而且发现较高品质的葡萄酒似乎酸度较低，酒精和残糖含量较高
+
+# Reflection
+  首先我将这个包含了4898条白葡萄酒信息的数据集进行探索性数据分析以了解数据的特征。然后查阅了相关的资料了解到决定葡萄酒的品质有许多额相关因素，比如从化学成分来讲甜味（糖+酒精），酸味，苦味（酚--单宁）会决定酒的品质。还将这些葡萄酒按残糖度进行了口味的分类。尝试分析了：固定酸度，挥发性酸度，柠檬酸，总酸度，残糖量，酒精和质量这些特征，并且分析相关度。我对各种酸的化学成分对葡萄酒品质影响研究不足，将酸度求和，建立了一个模型试图来预测葡萄酒的评级，但是结果并没有很理想，只有21%的影响力。猜想是否柠檬酸虽然含量低，但在口感上对品质还有更大的影响。。
+一些文章指出葡萄酒的评级还会受到品牌，产地等等的因素的影响，这份数据中只有白葡萄酒的信息，也没有提到关于品牌和产地等其他的信息，所以该探索研究还存在很大的局限性。
+  在今后的进一步分析中，我认为可以尝试查找这些葡萄酒的到品牌，产地信息，要对新加入的项目进一步分析，来提高模型的影响度。
+
+
+### 参考文献：
+
+-葡萄酒的成分
+<http://www.calwineries.com/learn/wine-chemistry>
+
+-糖分
+<https://www.zhihu.com/question/28106600>
+
+<http://www.chinchinhk.com/2015/09/07/%E8%91%A1%E8%90%84%E9%85%92%E7%94%9C%E5%BA%A6%E8%A1%A8-wine-sweetness-chart/>
+
+<http://www.lookvin.com/article/news/detail-48080.html>
+
+-产地
+
+<http://www.wine-world.com/qa/20130329111726043>
